@@ -38,7 +38,6 @@ export default function LandingPage() {
         </div>
         <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
           <a href="#features" style={{ color: '#6B7280', textDecoration: 'none', fontWeight: '500', fontSize: '15px' }}>Fitur</a>
-          <a href="#about" style={{ color: '#6B7280', textDecoration: 'none', fontWeight: '500', fontSize: '15px' }}>Tentang</a>
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
@@ -250,8 +249,8 @@ export default function LandingPage() {
                   <line x1="15" x2="15.01" y1="9" y2="9" />
                 </svg>
               ),
-              title: 'Lacak Mood',
-              desc: 'Pantau perubahan emosimu dari waktu ke waktu dengan visualisasi menarik'
+              title: '',
+              desc: ''
             },
             {
               icon: (
