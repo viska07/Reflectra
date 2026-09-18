@@ -61,7 +61,12 @@ const startServer = async () => {
     // Tes koneksi database
     await sequelize.authenticate();
 
-    console.log('✅ Database Reflectra berhasil terhubung');
+    console.log('Database Reflectra berhasil terhubung');
+
+    // Sinkronisasi model dengan database
+    await sequelize.sync();
+
+    console.log('Database tables berhasil disinkronisasi');
 
     // Jalankan server
     app.listen(PORT, () => {
