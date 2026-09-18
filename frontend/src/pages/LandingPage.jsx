@@ -1,400 +1,551 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../App.css';
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#F7FFFC',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      overflow: 'hidden'
-    }}>
-      {/* Navigation */}
-      <nav style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '24px 48px',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            backgroundColor: '#64E2B7',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#064E3B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-            </svg>
-          </div>
-          <span style={{ fontSize: '24px', fontWeight: '800', color: '#1F2937' }}>Reflectra</span>
-        </div>
-        <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-          <a href="#features" style={{ color: '#6B7280', textDecoration: 'none', fontWeight: '500', fontSize: '15px' }}>Fitur</a>
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            style={{
-              backgroundColor: 'transparent',
-              border: '2px solid #64E2B7',
-              padding: '10px 24px',
-              borderRadius: '12px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              color: '#064E3B',
-              fontSize: '15px'
-            }}
-          >
-            Masuk
-          </button>
-        </div>
-      </nav>
+  const features = [
+    {
+      number: '01',
+      icon: '✦',
+      title: 'Tulis dengan bebas',
+      description:
+        'Tuangkan pikiran, perasaan, dan pengalamanmu ke dalam ruang pribadi yang nyaman.',
+    },
+    {
+      number: '02',
+      icon: '◌',
+      title: 'Pahami emosimu',
+      description:
+        'Reflectra membantu membaca pola emosional dari setiap refleksi yang kamu tulis.',
+    },
+    {
+      number: '03',
+      icon: '↗',
+      title: 'Temukan insight',
+      description:
+        'Dapatkan insight sederhana untuk membantumu memahami dirimu dengan lebih baik.',
+    },
+  ];
 
-      {/* Hero Section */}
-      <section style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '80px 48px',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        gap: '60px'
-      }}>
-        <div style={{ flex: 1, maxWidth: '560px' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: '#ECFEF7',
-            padding: '8px 16px',
-            borderRadius: '100px',
-            marginBottom: '24px'
-          }}>
-            <span style={{
-              width: '8px',
-              height: '8px',
-              backgroundColor: '#10B981',
-              borderRadius: '50%'
-            }} />
-            <span style={{ fontSize: '14px', color: '#064E3B', fontWeight: '600' }}>
-              Ruang refleksi pribadimu
+  return (
+    <div className="landing-page">
+
+      {/* =====================================================
+          NAVBAR
+      ===================================================== */}
+      <header className="landing-navbar">
+        <div className="nav-inner">
+
+          <button
+            className="brand"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            type="button"
+          >
+            <span className="brand-mark">
+              ◔
             </span>
-          </div>
-          
-          <h1 style={{
-            fontSize: '56px',
-            fontWeight: '800',
-            color: '#1F2937',
-            lineHeight: '1.1',
-            marginBottom: '24px'
-          }}>
-            Kenali dirimu
-            <br />
-            <span style={{ color: '#10B981' }}>lebih dalam</span>
-          </h1>
-          
-          <p style={{
-            fontSize: '18px',
-            color: '#6B7280',
-            lineHeight: '1.7',
-            marginBottom: '40px'
-          }}>
-            Reflectra adalah ruang aman untuk menulis, memahami emosi, 
-            dan menemukan insight berharga dari setiap pengalamanmu.
-          </p>
-          
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+
+            <span className="brand-name">
+              Reflectra
+            </span>
+          </button>
+
+          <nav className="nav-links">
+            <a href="#features">
+              Fitur
+            </a>
+
+            <a href="#how-it-works">
+              Cara Kerja
+            </a>
+
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
-              style={{
-                backgroundColor: '#64E2B7',
-                border: 'none',
-                padding: '16px 32px',
-                borderRadius: '16px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                color: '#064E3B',
-                fontSize: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 8px 24px rgba(100, 226, 183, 0.4)'
-              }}
+              className="nav-login"
+              onClick={() => navigate('/login')}
             >
-              Mulai Menulis
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
+              Masuk
             </button>
-            <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Gratis selamanya</span>
-          </div>
+          </nav>
+
         </div>
-        
-        {/* Hero Visual */}
-        <div style={{ flex: 1, position: 'relative' }}>
-          <div style={{
-            width: '100%',
-            maxWidth: '480px',
-            aspectRatio: '1',
-            backgroundColor: '#ECFEF7',
-            borderRadius: '32px',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-40px',
-              right: '-40px',
-              width: '200px',
-              height: '200px',
-              backgroundColor: '#DCFCE7',
-              borderRadius: '50%',
-              opacity: 0.6
-            }} />
-            <div style={{
-              position: 'absolute',
-              bottom: '-60px',
-              left: '-60px',
-              width: '280px',
-              height: '280px',
-              backgroundColor: '#64E2B7',
-              borderRadius: '50%',
-              opacity: 0.3
-            }} />
-            
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: '#FFFFFF',
-              padding: '28px',
-              borderRadius: '20px',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.1)',
-              width: '320px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <span style={{ fontSize: '28px' }}>{"😊"}</span>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#1F2937' }}>Senang</div>
-                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Hari ini</div>
+      </header>
+
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
+      <main>
+
+        <section className="hero-section">
+
+          <div className="hero-glow hero-glow-one" />
+          <div className="hero-glow hero-glow-two" />
+
+          <div className="hero-inner">
+
+            {/* LEFT */}
+            <div className="hero-content">
+
+              <div className="hero-badge">
+                <span className="badge-dot" />
+                Ruang refleksi pribadimu
+              </div>
+
+              <h1>
+                Kenali dirimu,
+                <span>
+                  lebih dalam.
+                </span>
+              </h1>
+
+              <p className="hero-description">
+                Sebuah ruang tenang untuk menulis, memahami perasaan,
+                dan menemukan insight dari setiap perjalanan yang kamu lalui.
+              </p>
+
+              <div className="hero-actions">
+
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => navigate('/login')}
+                >
+                  Mulai Menulis
+
+                  <span className="button-arrow">
+                    →
+                  </span>
+                </button>
+
+                <a
+                  href="#features"
+                  className="secondary-link"
+                >
+                  Jelajahi Reflectra
+                </a>
+
+              </div>
+
+              <div className="hero-meta">
+
+                <div className="meta-item">
+                  <strong>100%</strong>
+                  <span>Pribadi</span>
                 </div>
+
+                <div className="meta-divider" />
+
+                <div className="meta-item">
+                  <strong>AI</strong>
+                  <span>Insight</span>
+                </div>
+
+                <div className="meta-divider" />
+
+                <div className="meta-item">
+                  <strong>Free</strong>
+                  <span>Selamanya</span>
+                </div>
+
               </div>
-              <p style={{ fontSize: '14px', color: '#6B7280', lineHeight: '1.6', marginBottom: '16px' }}>
-                Hari ini produktif sekali. Berhasil menyelesaikan proyek dan dapat apresiasi dari tim.
-              </p>
-              <div style={{
-                backgroundColor: '#F7FFFC',
-                padding: '12px 16px',
-                borderRadius: '12px',
-                borderLeft: '3px solid #10B981'
-              }}>
-                <div style={{ fontSize: '11px', color: '#10B981', fontWeight: '600', marginBottom: '4px' }}>INSIGHT</div>
-                <div style={{ fontSize: '13px', color: '#374151' }}>Kerja keras dan kolaborasi membawa hasil positif.</div>
-              </div>
+
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section id="features" style={{
-        padding: '80px 48px',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-          <h2 style={{ fontSize: '40px', fontWeight: '800', color: '#1F2937', marginBottom: '16px' }}>
-            Fitur Unggulan
-          </h2>
-          <p style={{ fontSize: '18px', color: '#6B7280', maxWidth: '500px', margin: '0 auto' }}>
-            Semua yang kamu butuhkan untuk perjalanan refleksi diri
-          </p>
-        </div>
-        
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '24px'
-        }}>
-          {[
-            {
-              icon: (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                  <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
-                  <path d="M9 9l1 0" />
-                  <path d="M9 13l6 0" />
-                  <path d="M9 17l6 0" />
-                </svg>
-              ),
-              title: 'Tulis Refleksi',
-              desc: 'Catat pikiran dan perasaanmu dengan mudah dalam format yang nyaman'
-            },
-            {
-              icon: (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M8 14s1.5 2 4 2 4 -2 4 -2" />
-                  <line x1="9" x2="9.01" y1="9" y2="9" />
-                  <line x1="15" x2="15.01" y1="9" y2="9" />
-                </svg>
-              ),
-              title: '',
-              desc: ''
-            },
-            {
-              icon: (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                  <path d="M12 8l0 4l2 2" />
-                </svg>
-              ),
-              title: 'Insight Harian',
-              desc: 'Dapatkan pemahaman mendalam tentang pola pikir dan kebiasaanmu'
-            }
-          ].map((feature, idx) => (
-            <div key={idx} style={{
-              backgroundColor: '#FFFFFF',
-              padding: '36px',
-              borderRadius: '24px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.04)'
-            }}>
-              <div style={{
-                width: '56px',
-                height: '56px',
-                backgroundColor: '#ECFEF7',
-                borderRadius: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
-                {feature.icon}
+
+            {/* RIGHT VISUAL */}
+            <div className="hero-visual">
+
+              <div className="visual-orbit orbit-one" />
+              <div className="visual-orbit orbit-two" />
+
+              <div className="reflection-window">
+
+                <div className="window-header">
+
+                  <div className="window-dots">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+
+                  <span className="window-title">
+                    My Reflection
+                  </span>
+
+                  <span className="window-date">
+                    Today
+                  </span>
+
+                </div>
+
+
+                <div className="reflection-body">
+
+                  <div className="mood-row">
+
+                    <div className="mood-icon">
+                      ☺
+                    </div>
+
+                    <div>
+                      <span className="mood-label">
+                        Feeling good
+                      </span>
+
+                      <span className="mood-date">
+                        A moment of gratitude
+                      </span>
+                    </div>
+
+                  </div>
+
+
+                  <div className="reflection-lines">
+
+                    <span>
+                      Today I finally had some time
+                    </span>
+
+                    <span>
+                      to slow down and appreciate
+                    </span>
+
+                    <span>
+                      the little things around me...
+                    </span>
+
+                  </div>
+
+
+                  <div className="insight-card">
+
+                    <div className="insight-icon">
+                      ✦
+                    </div>
+
+                    <div>
+                      <span className="insight-label">
+                        REFLECTRA INSIGHT
+                      </span>
+
+                      <p>
+                        Gratitude can help you notice
+                        positive moments more often.
+                      </p>
+                    </div>
+
+                  </div>
+
+                </div>
+
               </div>
-              <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1F2937', marginBottom: '12px' }}>
-                {feature.title}
-              </h3>
-              <p style={{ fontSize: '15px', color: '#6B7280', lineHeight: '1.6' }}>
-                {feature.desc}
-              </p>
+
+
+              <div className="floating-card floating-card-top">
+
+                <span className="floating-icon">
+                  ✦
+                </span>
+
+                <div>
+                  <strong>
+                    Daily Insight
+                  </strong>
+
+                  <small>
+                    Keep reflecting
+                  </small>
+                </div>
+
+              </div>
+
+
+              <div className="floating-card floating-card-bottom">
+
+                <div className="mini-avatar">
+                  ☺
+                </div>
+
+                <div>
+                  <strong>
+                    You're doing great
+                  </strong>
+
+                  <small>
+                    Keep going today
+                  </small>
+                </div>
+
+              </div>
+
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section style={{
-        padding: '80px 48px',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <div style={{
-          backgroundColor: '#064E3B',
-          borderRadius: '32px',
-          padding: '64px',
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: '-100px',
-            right: '-100px',
-            width: '300px',
-            height: '300px',
-            backgroundColor: '#10B981',
-            borderRadius: '50%',
-            opacity: 0.1
-          }} />
-          <div style={{
-            position: 'absolute',
-            bottom: '-80px',
-            left: '-80px',
-            width: '250px',
-            height: '250px',
-            backgroundColor: '#64E2B7',
-            borderRadius: '50%',
-            opacity: 0.1
-          }} />
-          
-          <h2 style={{
-            fontSize: '36px',
-            fontWeight: '800',
-            color: '#FFFFFF',
-            marginBottom: '16px',
-            position: 'relative'
-          }}>
-            Siap memulai perjalananmu?
-          </h2>
-          <p style={{
-            fontSize: '18px',
-            color: '#A7F3D0',
-            marginBottom: '32px',
-            position: 'relative'
-          }}>
-            Bergabung dan mulai mengenal dirimu lebih dalam hari ini.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            style={{
-              backgroundColor: '#64E2B7',
-              border: 'none',
-              padding: '18px 40px',
-              borderRadius: '16px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              color: '#064E3B',
-              fontSize: '17px',
-              position: 'relative',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
-            }}
-          >
-            Mulai Sekarang - Gratis
-          </button>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{
-        padding: '40px 48px',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        borderTop: '1px solid #E5E7EB',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            backgroundColor: '#64E2B7',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#064E3B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-            </svg>
           </div>
-          <span style={{ fontSize: '16px', fontWeight: '700', color: '#1F2937' }}>Reflectra</span>
+        </section>
+
+
+        {/* =====================================================
+            INTRO / FEATURES
+        ===================================================== */}
+        <section
+          className="features-section"
+          id="features"
+        >
+
+          <div className="section-container">
+
+            <div className="section-heading">
+
+              <span className="section-eyebrow">
+                WHY REFLECTRA
+              </span>
+
+              <h2>
+                Ruang kecil untuk 
+                <span>
+                  memahami diri.
+                </span>
+              </h2>
+
+              <p>
+                Tidak perlu selalu mencari jawaban dari luar.
+                Terkadang, jawabannya muncul ketika kita memberi
+                waktu untuk mendengarkan diri sendiri.
+              </p>
+
+            </div>
+
+
+            <div className="feature-grid">
+
+              {features.map((feature) => (
+                <article
+                  className="feature-card"
+                  key={feature.number}
+                >
+
+                  <div className="feature-top">
+
+                    <span className="feature-number">
+                      {feature.number}
+                    </span>
+
+                    <span className="feature-icon">
+                      {feature.icon}
+                    </span>
+
+                  </div>
+
+                  <h3>
+                    {feature.title}
+                  </h3>
+
+                  <p>
+                    {feature.description}
+                  </p>
+
+                  <div className="feature-line" />
+
+                </article>
+              ))}
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* =====================================================
+            HOW IT WORKS
+        ===================================================== */}
+        <section
+          className="how-section"
+          id="how-it-works"
+        >
+
+          <div className="section-container">
+
+            <div className="how-layout">
+
+              <div className="how-intro">
+
+                <span className="section-eyebrow">
+                  SIMPLE PROCESS
+                </span>
+
+                <h2>
+                  Refleksi yang
+                  <span>
+                    sederhana.
+                  </span>
+                </h2>
+
+                <p>
+                  Mulai dari satu kalimat sederhana.
+                  Biarkan Reflectra membantumu melihat
+                  pengalamanmu dari perspektif yang berbeda.
+                </p>
+
+                <button
+                  type="button"
+                  className="outline-button"
+                  onClick={() => navigate('/login')}
+                >
+                  Mulai Refleksi
+                  <span>→</span>
+                </button>
+
+              </div>
+
+
+              <div className="steps">
+
+                <div className="step">
+
+                  <div className="step-number">
+                    01
+                  </div>
+
+                  <div>
+                    <h3>
+                      Tulis
+                    </h3>
+
+                    <p>
+                      Ceritakan apa yang sedang kamu rasakan
+                      tanpa perlu takut dihakimi.
+                    </p>
+                  </div>
+
+                </div>
+
+
+                <div className="step">
+
+                  <div className="step-number">
+                    02
+                  </div>
+
+                  <div>
+                    <h3>
+                      Reflect
+                    </h3>
+
+                    <p>
+                      Reflectra membaca pola emosi dari
+                      tulisan refleksimu.
+                    </p>
+                  </div>
+
+                </div>
+
+
+                <div className="step">
+
+                  <div className="step-number">
+                    03
+                  </div>
+
+                  <div>
+                    <h3>
+                      Understand
+                    </h3>
+
+                    <p>
+                      Temukan insight yang bisa membantumu
+                      memahami perjalananmu.
+                    </p>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* =====================================================
+            CTA
+        ===================================================== */}
+        <section className="cta-section">
+
+          <div className="cta-container">
+
+            <div className="cta-decoration cta-decoration-one" />
+            <div className="cta-decoration cta-decoration-two" />
+
+            <div className="cta-content">
+
+              <span className="cta-eyebrow">
+                YOUR JOURNEY STARTS HERE
+              </span>
+
+              <h2>
+                Luangkan waktu
+                <br />
+                untuk dirimu sendiri.
+              </h2>
+
+              <p>
+                Satu refleksi kecil hari ini bisa menjadi
+                langkah besar untuk mengenal dirimu.
+              </p>
+
+              <button
+                type="button"
+                className="cta-button"
+                onClick={() => navigate('/login')}
+              >
+                Mulai Sekarang
+                <span>
+                  →
+                </span>
+              </button>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+
+
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+      <footer className="landing-footer">
+
+        <div className="footer-inner">
+
+          <div className="footer-brand">
+
+            <span className="brand-mark small">
+              ◔
+            </span>
+
+            <span>
+              Reflectra
+            </span>
+
+          </div>
+
+          <p>
+            © 2026 Reflectra. A space to understand yourself.
+          </p>
+
         </div>
-        <p style={{ fontSize: '14px', color: '#9CA3AF' }}>
-          2025 Reflectra. Dibuat dengan cinta.
-        </p>
+
       </footer>
+
     </div>
   );
 }

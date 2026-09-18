@@ -1,275 +1,374 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { reflectionService } from '../services/api';
+import { reflectionService, authService } from '../services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
   const [reflections, setReflections] = useState([]);
-  const [activeNav, setActiveNav] = useState('dashboard');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const user = authService.getCurrentUser();
 
   useEffect(() => {
-    reflectionService
-      .getAll()
-      .then(setReflections)
-      .catch(console.error);
+    loadReflections();
   }, []);
 
-  const total = reflections.length;
-  const lastReflection = reflections[0];
+  const loadReflections = async () => {
+    try {
+      setLoading(true);
+      setError('');
 
-  const moodCount = reflections.reduce((acc, cur) => {
-    acc[cur.mood] = (acc[cur.mood] || 0) + 1;
-    return acc;
-  }, {});
+      const data = await reflectionService.getAll();
 
-  const handleNavClick = (path, navItem) => {
-    setActiveNav(navItem);
-    navigate(path);
+      setReflections(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Gagal mengambil refleksi:', err);
+      setError(err.message || 'Gagal mengambil data refleksi');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const latestReflection = reflections.length > 0
+    ? reflections[0]
+    : null;
+
+  const moodCount = useMemo(() => {
+    return reflections.reduce((total, item) => {
+      if (item.mood) {
+        total[item.mood] = (total[item.mood] || 0) + 1;
+      }
+
+      return total;
+    }, {});
+  }, [reflections]);
+
+  const dominantMood = useMemo(() => {
+    const entries = Object.entries(moodCount);
+
+    if (entries.length === 0) {
+      return '-';
+    }
+
+    return entries.sort((a, b) => b[1] - a[1])[0][0];
+  }, [moodCount]);
+
+  const getMoodEmoji = (mood) => {
+    const value = String(mood || '').toLowerCase();
+
+    if (value.includes('posit')) return '😊';
+    if (value.includes('negat')) return '😔';
+    if (value.includes('netral')) return '😐';
+
+    return '🌱';
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '-';
+
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/');
+  };
+
+  const firstName = user?.name
+    ? user.name.split(' ')[0]
+    : 'Teman';
 
   return (
     <div style={styles.page}>
+
       {/* SIDEBAR */}
       <aside style={styles.sidebar}>
-        <div style={styles.logoContainer}>
-          <div style={styles.logoIcon}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
+
+        <div>
+          <div style={styles.logoArea}>
+            <div style={styles.logoMark}>R</div>
+
+            <div>
+              <h2 style={styles.logo}>Reflectra</h2>
+              <span style={styles.logoSubtitle}>Personal reflection</span>
+            </div>
           </div>
-          <h2 style={styles.logo}>Reflectra</h2>
+
+          <nav style={styles.navigation}>
+
+            <button
+              type="button"
+              style={{
+                ...styles.navItem,
+                ...styles.navItemActive
+              }}
+              onClick={() => navigate('/dashboard')}
+            >
+              <span style={styles.navIcon}>⌂</span>
+              <span>Dashboard</span>
+            </button>
+
+            <button
+              type="button"
+              style={styles.navItem}
+              onClick={() => navigate('/reflections')}
+            >
+              <span style={styles.navIcon}>◷</span>
+              <span>Riwayat</span>
+            </button>
+
+          </nav>
         </div>
 
-        <nav style={styles.nav}>
-          <button
-            type="button"
-            style={{
-              ...styles.navItem,
-              ...(activeNav === 'dashboard' ? styles.navItemActive : {})
-            }}
-            onClick={() => handleNavClick('/dashboard', 'dashboard')}
-          >
-            <span style={styles.navIcon}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9,22 9,12 15,12 15,22"/>
-              </svg>
-            </span>
-            Dashboard
-          </button>
+        <div style={styles.sidebarBottom}>
 
-          <button
-            type="button"
-            style={{
-              ...styles.navItem,
-              ...(activeNav === 'reflections' ? styles.navItemActive : {})
-            }}
-            onClick={() => handleNavClick('/reflections', 'reflections')}
-          >
-            <span style={styles.navIcon}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-              </svg>
-            </span>
-            Refleksi
-          </button>
-        </nav>
-
-        <div style={styles.sidebarFooter}>
-          <div style={styles.userSection}>
+          <div style={styles.userCard}>
             <div style={styles.avatar}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
+              {firstName.charAt(0).toUpperCase()}
             </div>
-            <div style={styles.userInfo}>
-              <span style={styles.userName}>Pengguna</span>
-              <span style={styles.userStatus}>Online</span>
+
+            <div style={styles.userDetails}>
+              <strong>{user?.name || 'Pengguna'}</strong>
+              <span>Reflektor</span>
             </div>
           </div>
+
           <button
             type="button"
-            style={styles.logout}
-            onClick={() => navigate('/')}
+            style={styles.logoutButton}
+            onClick={handleLogout}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16,17 21,12 16,7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
+            <span>↪</span>
             Keluar
           </button>
+
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <main style={styles.main}>
-        {/* HEADER */}
+
         <header style={styles.header}>
-          <div style={styles.headerContent}>
-            <div style={styles.greetingBadge}>
-              <span style={styles.wave}>👋</span>
-              <span>Selamat datang kembali</span>
+
+          <div>
+            <div style={styles.smallGreeting}>
+              Selamat datang kembali
             </div>
-            <h1 style={styles.title}>Dashboard Refleksi</h1>
+
+            <h1 style={styles.title}>
+              Halo, {firstName} <span>👋</span>
+            </h1>
+
             <p style={styles.subtitle}>
-              Jaga pikiranmu, satu refleksi setiap hari.
+              Luangkan sedikit waktu untuk memahami dirimu hari ini.
             </p>
           </div>
 
           <button
             type="button"
+            style={styles.primaryButton}
             onClick={() => navigate('/add-reflection')}
-            style={styles.addBtn}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Catatan Baru
+            <span style={styles.plus}>+</span>
+            Tulis Refleksi
           </button>
+
         </header>
 
-        {/* STATS */}
-        <section style={styles.stats}>
+        {/* STATISTICS */}
+        <section style={styles.statsGrid}>
+
           <div style={styles.statCard}>
-            <div style={styles.statIconWrapper}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14,2 14,8 20,8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10,9 9,9 8,9"/>
-              </svg>
-            </div>
-            <div style={styles.statInfo}>
-              <h3 style={styles.statNumber}>{total}</h3>
-              <p style={styles.statLabel}>Total Refleksi</p>
+            <div style={styles.statIcon}>✦</div>
+
+            <div>
+              <span style={styles.statLabel}>Total Refleksi</span>
+              <strong style={styles.statValue}>
+                {reflections.length}
+              </strong>
             </div>
           </div>
 
           <div style={styles.statCard}>
-            <div style={{...styles.statIconWrapper, background: '#DCFCE7'}}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                <line x1="9" y1="9" x2="9.01" y2="9"/>
-                <line x1="15" y1="9" x2="15.01" y2="9"/>
-              </svg>
-            </div>
-            <div style={styles.statInfo}>
-              <h3 style={styles.statNumber}>{moodCount.Positif || 0}</h3>
-              <p style={styles.statLabel}>Hari Positif</p>
+            <div style={styles.statIcon}>◷</div>
+
+            <div>
+              <span style={styles.statLabel}>Refleksi Terakhir</span>
+              <strong style={styles.statValueSmall}>
+                {latestReflection
+                  ? formatDate(latestReflection.createdAt)
+                  : '-'}
+              </strong>
             </div>
           </div>
 
           <div style={styles.statCard}>
-            <div style={{...styles.statIconWrapper, background: '#FEE2E2'}}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M16 16s-1.5-2-4-2-4 2-4 2"/>
-                <line x1="9" y1="9" x2="9.01" y2="9"/>
-                <line x1="15" y1="9" x2="15.01" y2="9"/>
-              </svg>
+            <div style={styles.statIcon}>
+              {getMoodEmoji(dominantMood)}
             </div>
-            <div style={styles.statInfo}>
-              <h3 style={styles.statNumber}>{moodCount.Negatif || 0}</h3>
-              <p style={styles.statLabel}>Hari Sulit</p>
+
+            <div>
+              <span style={styles.statLabel}>Mood Dominan</span>
+              <strong style={styles.statValueSmall}>
+                {dominantMood}
+              </strong>
             </div>
           </div>
+
         </section>
 
-        {/* LAST REFLECTION */}
-        <section style={styles.reflectionSection}>
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Refleksi Terakhir</h2>
-            <button
-              type="button"
-              style={styles.viewAllBtn}
-              onClick={() => navigate('/add-reflection')}
-            >
-              Refleksi
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9,18 15,12 9,6"/>
-              </svg>
-            </button>
-          </div>
+        {/* CONTENT */}
+        <section style={styles.contentGrid}>
 
-          {lastReflection ? (
-            <div style={styles.card}>
-              <div style={styles.cardHead}>
-                <div style={styles.moodBadge}>
-                  <span style={styles.moodEmoji}>
-                    {lastReflection.mood === 'Positif' ? '😊' : lastReflection.mood === 'Negatif' ? '😔' : '😐'}
-                  </span>
-                  <span style={{
-                    ...styles.mood,
-                    background: lastReflection.mood === 'Positif' ? '#DCFCE7' : lastReflection.mood === 'Negatif' ? '#FEE2E2' : '#FEF3C7',
-                    color: lastReflection.mood === 'Positif' ? '#166534' : lastReflection.mood === 'Negatif' ? '#991B1B' : '#92400E'
-                  }}>
-                    {lastReflection.mood}
-                  </span>
-                </div>
-                <div style={styles.dateWrapper}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
-                  <span style={styles.date}>
-                    {new Date(lastReflection.createdAt).toLocaleDateString('id-ID', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
-                </div>
+          {/* LATEST REFLECTION */}
+          <div style={styles.latestSection}>
+
+            <div style={styles.sectionHeader}>
+              <div>
+                <span style={styles.sectionEyebrow}>
+                  JOURNAL
+                </span>
+
+                <h2 style={styles.sectionTitle}>
+                  Refleksi Terbaru
+                </h2>
               </div>
 
-              <div style={styles.cardBody}>
-                <p style={styles.content}>
-                  {lastReflection.content}
-                </p>
-              </div>
-
-              <div style={styles.insight}>
-                <div style={styles.insightHeader}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="16" x2="12" y2="12"/>
-                    <line x1="12" y1="8" x2="12.01" y2="8"/>
-                  </svg>
-                  <strong style={styles.insightTitle}>AI Insight</strong>
-                </div>
-                <p style={styles.insightText}>{lastReflection.ai_result}</p>
-              </div>
-            </div>
-          ) : (
-            <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14,2 14,8 20,8"/>
-                </svg>
-              </div>
-              <p style={styles.emptyText}>Belum ada refleksi</p>
-              <p style={styles.emptySubtext}>Mulai catat perjalanan harimu</p>
               <button
                 type="button"
-                onClick={() => navigate('/add-reflection')}
-                style={styles.emptyBtn}
+                style={styles.textButton}
+                onClick={() => navigate('/reflections')}
               >
-                Buat Refleksi Pertama
+                Lihat semua →
               </button>
             </div>
-          )}
+
+            {loading ? (
+              <div style={styles.stateCard}>
+                <div style={styles.loaderCircle}>↻</div>
+                <p>Memuat refleksi...</p>
+              </div>
+            ) : error ? (
+              <div style={styles.stateCard}>
+                <div style={styles.stateIcon}>!</div>
+                <h3>Data belum dapat dimuat</h3>
+                <p>{error}</p>
+
+                <button
+                  type="button"
+                  style={styles.retryButton}
+                  onClick={loadReflections}
+                >
+                  Coba lagi
+                </button>
+              </div>
+            ) : !latestReflection ? (
+              <div style={styles.stateCard}>
+                <div style={styles.emptyIcon}>✎</div>
+
+                <h3>Belum ada refleksi</h3>
+
+                <p>
+                  Mulai tuliskan apa yang sedang kamu rasakan
+                  dan pikirkan hari ini.
+                </p>
+
+                <button
+                  type="button"
+                  style={styles.retryButton}
+                  onClick={() => navigate('/add-reflection')}
+                >
+                  Tulis refleksi pertama
+                </button>
+              </div>
+            ) : (
+              <article style={styles.reflectionCard}>
+
+                <div style={styles.reflectionTop}>
+                  <div style={styles.moodContainer}>
+                    <span style={styles.moodEmoji}>
+                      {getMoodEmoji(latestReflection.mood)}
+                    </span>
+
+                    <span style={styles.moodBadge}>
+                      {latestReflection.mood || 'Tidak diketahui'}
+                    </span>
+                  </div>
+
+                  <span style={styles.date}>
+                    {formatDate(latestReflection.createdAt)}
+                  </span>
+                </div>
+
+                <p style={styles.reflectionContent}>
+                  {latestReflection.content}
+                </p>
+
+                {latestReflection.ai_result && (
+                  <div style={styles.insightBox}>
+
+                    <div style={styles.insightTitle}>
+                      <span>✦</span>
+                      Insight Reflectra
+                    </div>
+
+                    <p>
+                      {latestReflection.ai_result}
+                    </p>
+
+                  </div>
+                )}
+
+              </article>
+            )}
+
+          </div>
+
+          {/* SIDE INFO */}
+          <aside style={styles.sidePanel}>
+
+            <div style={styles.miniHeader}>
+              <span style={styles.miniIcon}>♡</span>
+
+              <div>
+                <span style={styles.sectionEyebrow}>
+                  REFLECT
+                </span>
+
+                <h3 style={styles.miniTitle}>
+                  Ruang untukmu
+                </h3>
+              </div>
+            </div>
+
+            <p style={styles.miniText}>
+              Tidak perlu menulis dengan sempurna.
+              Cukup jujur dengan apa yang kamu rasakan.
+            </p>
+
+            <div style={styles.quote}>
+              “Memahami diri sendiri adalah awal
+              dari perubahan.”
+            </div>
+
+            <button
+              type="button"
+              style={styles.secondaryButton}
+              onClick={() => navigate('/add-reflection')}
+            >
+              Mulai menulis →
+            </button>
+
+          </aside>
+
         </section>
+
       </main>
     </div>
   );
@@ -277,363 +376,474 @@ export default function Dashboard() {
 
 const styles = {
   page: {
-    display: 'flex',
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #F7FFFC 0%, #ECFEF7 100%)',
+    display: 'flex',
+    background: '#F5FAF8',
+    color: '#17211D',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   },
+
   sidebar: {
-    width: '280px',
-    background: '#fff',
-    padding: '28px 20px',
-    borderRight: '1px solid #E5E7EB',
+    width: '250px',
+    minHeight: '100vh',
+    background: '#FFFFFF',
+    borderRight: '1px solid #E4ECE8',
+    padding: '28px 18px',
+    boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '4px 0 24px rgba(0,0,0,0.03)'
+    justifyContent: 'space-between',
+    position: 'sticky',
+    top: 0,
+    alignSelf: 'flex-start'
   },
-  logoContainer: {
+
+  logoArea: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    marginBottom: '40px',
-    paddingLeft: '12px'
+    gap: '11px',
+    padding: '4px 10px',
+    marginBottom: '42px'
   },
-  logoIcon: {
+
+  logoMark: {
     width: '40px',
     height: '40px',
-    background: '#ECFEF7',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  logo: {
-    fontSize: '22px',
-    fontWeight: '800',
-    color: '#111827',
-    margin: 0,
-    letterSpacing: '-0.5px'
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  navItem: {
-    background: 'transparent',
-    border: 'none',
-    textAlign: 'left',
-    padding: '14px 16px',
-    cursor: 'pointer',
-    fontSize: '15px',
-    fontWeight: '500',
-    color: '#6B7280',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    transition: 'all 0.2s ease'
-  },
-  navItemActive: {
-    background: '#ECFEF7',
-    color: '#10B981',
-    fontWeight: '600'
-  },
-  navIcon: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  sidebarFooter: {
-    marginTop: 'auto',
-    paddingTop: '24px',
-    borderTop: '1px solid #E5E7EB'
-  },
-  userSection: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px',
-    marginBottom: '12px'
-  },
-  avatar: {
-    width: '40px',
-    height: '40px',
-    background: '#F3F4F6',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  userInfo: {
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  userName: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#111827'
-  },
-  userStatus: {
-    fontSize: '12px',
-    color: '#10B981'
-  },
-  logout: {
-    width: '100%',
-    background: 'transparent',
-    border: '1px solid #E5E7EB',
-    padding: '12px 16px',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    color: '#6B7280',
-    fontSize: '14px',
-    fontWeight: '500',
+    borderRadius: '13px',
+    background: '#DDF7EC',
+    color: '#15966C',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '8px',
-    transition: 'all 0.2s ease'
+    fontSize: '19px',
+    fontWeight: '800'
   },
+
+  logo: {
+    margin: 0,
+    fontSize: '19px',
+    fontWeight: '800',
+    letterSpacing: '-0.4px'
+  },
+
+  logoSubtitle: {
+    display: 'block',
+    marginTop: '2px',
+    color: '#9AA8A2',
+    fontSize: '10px'
+  },
+
+  navigation: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+
+  navItem: {
+    width: '100%',
+    border: 'none',
+    background: 'transparent',
+    color: '#78847F',
+    borderRadius: '12px',
+    padding: '13px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    textAlign: 'left'
+  },
+
+  navItemActive: {
+    background: '#E7F8F0',
+    color: '#15966C',
+    fontWeight: '700'
+  },
+
+  navIcon: {
+    width: '20px',
+    textAlign: 'center',
+    fontSize: '18px'
+  },
+
+  sidebarBottom: {
+    borderTop: '1px solid #E8EFEC',
+    paddingTop: '18px'
+  },
+
+  userCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '8px'
+  },
+
+  avatar: {
+    width: '38px',
+    height: '38px',
+    borderRadius: '12px',
+    background: '#EAF0ED',
+    color: '#53645D',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '700',
+    fontSize: '14px'
+  },
+
+  userDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0
+  },
+
+  userDetailsStrong: {},
+
+  logoutButton: {
+    width: '100%',
+    marginTop: '12px',
+    padding: '10px',
+    border: '1px solid #E3EBE7',
+    borderRadius: '10px',
+    background: '#FFFFFF',
+    color: '#7C8984',
+    cursor: 'pointer',
+    fontSize: '13px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px'
+  },
+
   main: {
     flex: 1,
-    padding: '40px 48px',
-    overflowY: 'auto'
+    padding: '42px 48px',
+    boxSizing: 'border-box',
+    maxWidth: '1500px',
+    margin: '0 auto'
   },
+
   header: {
     display: 'flex',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '40px'
+    gap: '30px',
+    marginBottom: '34px'
   },
-  headerContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  greetingBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    background: '#fff',
-    padding: '8px 16px',
-    borderRadius: '100px',
-    fontSize: '13px',
-    color: '#6B7280',
-    marginBottom: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-    width: 'fit-content'
-  },
-  wave: {
-    fontSize: '16px'
-  },
-  title: {
-    fontSize: '32px',
-    fontWeight: '800',
-    color: '#111827',
-    margin: 0,
-    letterSpacing: '-0.5px'
-  },
-  subtitle: {
-    fontSize: '15px',
-    color: '#6B7280',
-    margin: 0
-  },
-  addBtn: {
-    background: 'linear-gradient(135deg, #64E2B7 0%, #10B981 100%)',
-    border: 'none',
-    padding: '14px 24px',
-    borderRadius: '14px',
+
+  smallGreeting: {
+    color: '#7E8D86',
+    fontSize: '12px',
     fontWeight: '600',
-    fontSize: '14px',
+    letterSpacing: '0.3px',
+    marginBottom: '7px'
+  },
+
+  title: {
+    margin: 0,
+    fontSize: '32px',
+    lineHeight: 1.15,
+    fontWeight: '800',
+    letterSpacing: '-1px'
+  },
+
+  subtitle: {
+    margin: '10px 0 0',
+    color: '#7B8983',
+    fontSize: '14px'
+  },
+
+  primaryButton: {
+    border: 'none',
+    borderRadius: '12px',
+    padding: '13px 18px',
+    background: '#15966C',
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: '13px',
     cursor: 'pointer',
-    color: '#fff',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
-    transition: 'all 0.2s ease'
+    boxShadow: '0 8px 20px rgba(21, 150, 108, 0.16)'
   },
-  stats: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '24px',
-    marginBottom: '40px'
-  },
-  statCard: {
-    background: '#fff',
-    borderRadius: '20px',
-    padding: '24px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-    transition: 'all 0.2s ease',
-    border: '1px solid rgba(0,0,0,0.04)'
-  },
-  statIconWrapper: {
-    width: '56px',
-    height: '56px',
-    background: '#ECFEF7',
-    borderRadius: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0
-  },
-  statInfo: {
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  statNumber: {
-    fontSize: '32px',
-    fontWeight: '800',
-    color: '#111827',
-    margin: 0,
+
+  plus: {
+    fontSize: '19px',
     lineHeight: 1
   },
+
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: '16px',
+    marginBottom: '28px'
+  },
+
+  statCard: {
+    background: '#FFFFFF',
+    border: '1px solid #E5EEEA',
+    borderRadius: '17px',
+    padding: '19px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px'
+  },
+
+  statIcon: {
+    width: '43px',
+    height: '43px',
+    borderRadius: '13px',
+    background: '#E8F8F1',
+    color: '#15966C',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px',
+    flexShrink: 0
+  },
+
   statLabel: {
+    display: 'block',
+    color: '#8A9792',
+    fontSize: '11px',
+    marginBottom: '5px'
+  },
+
+  statValue: {
+    display: 'block',
+    fontSize: '25px',
+    fontWeight: '800'
+  },
+
+  statValueSmall: {
+    display: 'block',
     fontSize: '14px',
-    color: '#6B7280',
-    margin: '4px 0 0 0'
+    fontWeight: '700',
+    color: '#35433D'
   },
-  reflectionSection: {
-    background: '#fff',
-    borderRadius: '24px',
-    padding: '28px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-    border: '1px solid rgba(0,0,0,0.04)'
+
+  contentGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr) 280px',
+    gap: '20px',
+    alignItems: 'start'
   },
+
+  latestSection: {
+    background: '#FFFFFF',
+    border: '1px solid #E5EEEA',
+    borderRadius: '20px',
+    padding: '25px'
+  },
+
   sectionHeader: {
     display: 'flex',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '24px'
-  },
-  sectionTitle: {
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#111827',
-    margin: 0
-  },
-  viewAllBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: '#10B981',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    transition: 'all 0.2s ease'
-  },
-  card: {
-    background: '#FAFFFE',
-    padding: '24px',
-    borderRadius: '20px',
-    border: '1px solid #E5E7EB'
-  },
-  cardHead: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-    paddingBottom: '16px',
-    borderBottom: '1px solid #E5E7EB'
-  },
-  moodBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  moodEmoji: {
-    fontSize: '24px'
-  },
-  mood: {
-    padding: '6px 14px',
-    borderRadius: '100px',
-    fontSize: '13px',
-    fontWeight: '600'
-  },
-  dateWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  date: {
-    fontSize: '13px',
-    color: '#6B7280'
-  },
-  cardBody: {
+    gap: '15px',
     marginBottom: '20px'
   },
-  content: {
-    fontSize: '15px',
-    lineHeight: 1.8,
-    color: '#374151',
-    margin: 0
+
+  sectionEyebrow: {
+    display: 'block',
+    color: '#15966C',
+    fontSize: '9px',
+    fontWeight: '800',
+    letterSpacing: '1.5px',
+    marginBottom: '5px'
   },
-  insight: {
-    background: 'linear-gradient(135deg, #ECFEF7 0%, #DCFCE7 100%)',
-    padding: '20px',
-    borderRadius: '16px'
+
+  sectionTitle: {
+    margin: 0,
+    fontSize: '20px',
+    fontWeight: '800',
+    letterSpacing: '-0.4px'
   },
-  insightHeader: {
+
+  textButton: {
+    border: 'none',
+    background: 'transparent',
+    color: '#15966C',
+    fontSize: '12px',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
+
+  reflectionCard: {
+    background: '#F9FCFA',
+    border: '1px solid #E5EEEA',
+    borderRadius: '16px',
+    padding: '21px'
+  },
+
+  reflectionTop: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    marginBottom: '10px'
+    justifyContent: 'space-between',
+    marginBottom: '17px'
   },
+
+  moodContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+
+  moodEmoji: {
+    fontSize: '20px'
+  },
+
+  moodBadge: {
+    padding: '5px 10px',
+    borderRadius: '100px',
+    background: '#E5F7EF',
+    color: '#197A5D',
+    fontSize: '11px',
+    fontWeight: '700'
+  },
+
+  date: {
+    color: '#98A49F',
+    fontSize: '11px'
+  },
+
+  reflectionContent: {
+    margin: 0,
+    color: '#43514B',
+    fontSize: '14px',
+    lineHeight: 1.8
+  },
+
+  insightBox: {
+    marginTop: '18px',
+    padding: '15px',
+    borderRadius: '13px',
+    background: '#EAF8F2'
+  },
+
   insightTitle: {
-    fontSize: '14px',
-    color: '#10B981',
-    fontWeight: '600'
+    display: 'flex',
+    alignItems: 'center',
+    gap: '7px',
+    color: '#15966C',
+    fontSize: '11px',
+    fontWeight: '800',
+    marginBottom: '7px'
   },
-  insightText: {
-    fontSize: '14px',
+
+  insightBoxP: {},
+
+  sidePanel: {
+    background: '#173D31',
+    borderRadius: '20px',
+    padding: '24px',
+    color: '#FFFFFF',
+    minHeight: '240px',
+    boxSizing: 'border-box'
+  },
+
+  miniHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '11px'
+  },
+
+  miniIcon: {
+    width: '38px',
+    height: '38px',
+    borderRadius: '12px',
+    background: 'rgba(255,255,255,0.1)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px'
+  },
+
+  miniTitle: {
+    margin: 0,
+    fontSize: '16px',
+    fontWeight: '700'
+  },
+
+  miniText: {
+    color: '#C5D9D1',
+    fontSize: '12px',
     lineHeight: 1.7,
-    color: '#166534',
-    margin: 0
+    margin: '20px 0'
   },
-  emptyState: {
+
+  quote: {
+    borderLeft: '2px solid #61C9A4',
+    paddingLeft: '12px',
+    color: '#E2F1EB',
+    fontSize: '12px',
+    lineHeight: 1.6,
+    fontStyle: 'italic'
+  },
+
+  secondaryButton: {
+    width: '100%',
+    marginTop: '20px',
+    border: '1px solid rgba(255,255,255,0.18)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#FFFFFF',
+    borderRadius: '10px',
+    padding: '10px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: '700'
+  },
+
+  stateCard: {
+    minHeight: '260px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '60px 20px',
-    textAlign: 'center'
+    textAlign: 'center',
+    padding: '20px'
   },
-  emptyIcon: {
-    width: '80px',
-    height: '80px',
-    background: '#F3F4F6',
-    borderRadius: '24px',
+
+  stateIcon: {
+    width: '42px',
+    height: '42px',
+    borderRadius: '14px',
+    background: '#FFF1F1',
+    color: '#D95C5C',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '20px'
+    fontWeight: '800'
   },
-  emptyText: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#374151',
-    margin: '0 0 4px 0'
+
+  emptyIcon: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '15px',
+    background: '#EAF8F2',
+    color: '#15966C',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '21px'
   },
-  emptySubtext: {
-    fontSize: '14px',
-    color: '#9CA3AF',
-    margin: '0 0 24px 0'
+
+  loaderCircle: {
+    color: '#15966C',
+    fontSize: '25px'
   },
-  emptyBtn: {
-    background: '#10B981',
+
+  retryButton: {
     border: 'none',
-    padding: '12px 24px',
-    borderRadius: '12px',
-    fontWeight: '600',
-    fontSize: '14px',
+    background: '#15966C',
+    color: '#FFFFFF',
+    borderRadius: '10px',
+    padding: '10px 15px',
+    fontSize: '12px',
+    fontWeight: '700',
     cursor: 'pointer',
-    color: '#fff'
+    marginTop: '8px'
   }
 };
