@@ -31,6 +31,6 @@ backend/venv/
 .DS_Store
 
 # logs
-npm-debug.log*
+npm-debug.log*pm
 yarn-debug.log*
 yarn-error.log*
